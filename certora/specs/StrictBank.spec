@@ -1,3 +1,6 @@
+using DummyERC20A as erc20;
+using StrictBankHarness as strictBank;
+
 methods {
     // ERC20
     function _.name()                                external  => DISPATCHER(true);
@@ -49,4 +52,13 @@ rule balanceIndependence(method f, env e, address token1, address token2) filter
 
     uint256 balanceAfter = tokenBalances(e, token2); 
     assert (token2 != token1 => balanceBefore == balanceAfter);
-} 
+}
+
+rule balanceSync() {
+    env e;
+    uint256 currentBalance = erc20.balanceOf(e, strictBank);
+    strictBank.syncTokenBalance(e, erc20);
+
+    uint256 balanceAfter = strictBank.tokenBalances(erc20);
+    assert (currentBalance == balanceAfter);
+}
