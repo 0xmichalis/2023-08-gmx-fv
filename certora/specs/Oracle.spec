@@ -1,3 +1,5 @@
+using OracleHarness as oracle;
+
 methods {
     // DataStore
     function _.getUint(bytes32) external => DISPATCHER(true);
@@ -62,4 +64,25 @@ rule validateSignerConsistency() {
 
     assert (salt1 == salt2 && signer1 == signer2) => !lastReverted,
         "Revert characteristics of validateSigner are not consistent";
+}
+
+rule validateGetPriceFeed() {
+    env e;
+    address token;
+
+    // Pre-conditions
+    require(oracle.feedForTokenExists(e, token));
+    int256 price = oracle.getPrice(e, token);
+    uint256 precision = oracle.getPriceFeedMultiplier(e, token);
+    require(precision > 0);
+    oracle.getAdjustedPrice@withrevert(e, price, precision);
+    require(!lastReverted);
+
+    // Test getting feed price
+    oracle.getPriceFeedPrice@withrevert(e, token);
+    bool succeeded = !lastReverted;
+
+    // Post-conditions
+    assert price <= 0 <=> !succeeded, "Price feed can be non-positive";
+    assert price > 0 <=> succeeded, "Price feed is not positive";
 }

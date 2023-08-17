@@ -4,6 +4,9 @@ pragma solidity ^0.8.0;
 import {Oracle, DataStore, EventEmitter, RoleStore, OracleStore} from "../../contracts/oracle/Oracle.sol";
 import {OracleUtils} from "../../contracts/oracle/OracleUtils.sol";
 import {Bits} from "../../contracts/utils/Bits.sol";
+import {Precision} from "../../contracts/utils/Precision.sol";
+import "../../contracts/oracle/IPriceFeed.sol";
+import "../../contracts/data/Keys.sol";
 
 contract OracleHarness is Oracle {
 
@@ -82,5 +85,35 @@ contract OracleHarness is Oracle {
         address expectedSigner
     ) external view {
         OracleUtils.validateSigner(SALT, myReportInfo, signature, expectedSigner);
+    }
+
+    function feedForTokenExists(address token) public view returns (bool) {
+        return myDataStore.getAddress(Keys.priceFeedKey(token)) != address(0);
+    }
+
+    function getPriceFeedMultiplier(address token) external view returns (uint256) {
+        return myDataStore.getUint(Keys.priceFeedMultiplierKey(token));
+    }
+
+    function getPrice(address token) external view returns (int256) {
+        address priceFeedAddress = myDataStore.getAddress(Keys.priceFeedKey(token));
+        IPriceFeed priceFeed = IPriceFeed(priceFeedAddress);
+
+        (
+            /* uint80 roundID */,
+            int256 price,
+            /* uint256 startedAt */,
+            /* uint256 timestamp */,
+            /* uint80 answeredInRound */
+        ) = priceFeed.latestRoundData();
+        return price;
+    }
+
+    function getAdjustedPrice(int256 price, uint256 precision) external pure returns(uint256) {
+        return Precision.mulDiv(uint256(price), precision, Precision.FLOAT_PRECISION);
+    }
+
+    function getPriceFeedPrice(address token) external view returns (bool, uint256) {
+        return _getPriceFeedPrice(myDataStore, token);
     }
 }
