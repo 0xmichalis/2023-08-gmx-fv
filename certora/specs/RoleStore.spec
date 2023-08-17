@@ -71,6 +71,7 @@ rule grant_role_has_no_role {
     require(roleStore.hasAdminRole(e));
     // The account does not have the role
     require(!roleStore.hasRole(e, account, role));
+    require(!roleStore.hasRole1(e, account, role));
 
     roleMembersBefore = roleStore.getRoleMemberCount(e, role);
 
@@ -95,6 +96,7 @@ rule grant_role_has_role {
     require(roleStore.hasAdminRole(e));
     // The account has the role already
     require(roleStore.hasRole(e, account, role));
+    require(roleStore.hasRole1(e, account, role));
 
     roleMembersBefore = roleStore.getRoleMemberCount(e, role);
 
@@ -119,6 +121,7 @@ rule revoke_role {
     require(roleStore.hasAdminRole(e));
     // The account does not have the role
     require(!roleStore.hasRole(e, account, role));
+    require(!roleStore.hasRole1(e, account, role));
 
     roleMembersBefore = roleStore.getRoleMemberCount(e, role);
 
