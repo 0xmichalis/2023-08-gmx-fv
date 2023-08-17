@@ -37,6 +37,9 @@ hook Sload uint256 index currentContract.roleMembers[KEY bytes32 role]._inner._i
 
 // INVARIANTS
 
+invariant hasRole(env e, address account, bytes32 role)
+    hasRole(e, account, role) <=> hasRole1(e, role, account);
+
 invariant setInvariant(bytes32 role)
     (forall uint256 index. 0 <= index && index < ghostLength[role] => to_mathint(ghostIndexes[role][ghostValues[role][index]]) == index + 1)
     && (forall bytes32 value. ghostIndexes[role][value] == 0 || 
@@ -62,6 +65,7 @@ rule grant_role_has_no_role {
     uint256 roleMembersAfter;
 
     requireInvariant setInvariant(role);
+    requireInvariant hasRole(e, account, role);
 
     // The caller is an admin
     require(roleStore.hasAdminRole(e));
@@ -85,6 +89,7 @@ rule grant_role_has_role {
     uint256 roleMembersAfter;
 
     requireInvariant setInvariant(role);
+    requireInvariant hasRole(e, account, role);
 
     // The caller is an admin
     require(roleStore.hasAdminRole(e));
@@ -108,6 +113,7 @@ rule revoke_role {
     uint256 roleMembersAfter;
 
     requireInvariant setInvariant(role);
+    requireInvariant hasRole(e, account, role);
 
     // The caller is an admin
     require(roleStore.hasAdminRole(e));
